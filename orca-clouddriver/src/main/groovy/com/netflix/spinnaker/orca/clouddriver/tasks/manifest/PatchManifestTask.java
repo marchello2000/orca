@@ -147,7 +147,8 @@ public class PatchManifestTask extends AbstractCloudProviderAwareTask implements
         manifestWrapper = contextParameterProcessor.process(
           manifestWrapper,
           contextParameterProcessor.buildExecutionContext(stage, true),
-          true
+          true,
+          "stage[" + stage.getName() + "].manifests"
         );
 
         if (manifestWrapper.containsKey("expressionEvaluationSummary")) {

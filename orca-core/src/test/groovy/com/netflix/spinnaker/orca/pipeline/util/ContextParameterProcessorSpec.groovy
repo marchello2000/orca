@@ -836,7 +836,7 @@ class ContextParameterProcessorSpec extends Specification {
     result.comments == '${#toJson(execution)}'
     summary.size() == 1
     summary[escapedExpression][0].level as String == ExpressionEvaluationSummary.Result.Level.ERROR.name()
-    summary[escapedExpression][0].description.contains("Failed to evaluate [comments] result for toJson cannot contain an expression")
+    summary[escapedExpression][0].description.contains("Failed to evaluate [comments] on .comments result for toJson cannot contain an expression")
   }
 
   def "can read authenticated user in an execution"() {

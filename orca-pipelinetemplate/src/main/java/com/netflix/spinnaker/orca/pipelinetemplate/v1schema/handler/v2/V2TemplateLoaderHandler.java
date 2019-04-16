@@ -96,7 +96,8 @@ public class V2TemplateLoaderHandler implements Handler {
       Map<String, Object> resolvedVar = contextParameterProcessor.process(
         objectMapper.convertValue(v, MAP_TYPE_REFERENCE),
         renderContext.getVariables(),
-        true);
+        true,
+        "template");
       return objectMapper.convertValue(resolvedVar, V2PipelineTemplate.Variable.class);
     }
   }
@@ -110,7 +111,8 @@ public class V2TemplateLoaderHandler implements Handler {
     Map<String, Object> processedTemplate = contextParameterProcessor.process(
       objectMapper.convertValue(tc.getTemplate(), MAP_TYPE_REFERENCE),
       renderContext.getVariables(), // Lift trigger and application out of 'variables' namespace.
-      true);
+      true,
+      "template");
     tc.setTemplate(objectMapper.convertValue(processedTemplate, Artifact.class));
   }
 }

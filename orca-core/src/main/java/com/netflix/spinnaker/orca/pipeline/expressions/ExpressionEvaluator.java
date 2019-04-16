@@ -19,5 +19,10 @@ package com.netflix.spinnaker.orca.pipeline.expressions;
 import java.util.Map;
 
 public interface ExpressionEvaluator {
-  Map<String, Object> evaluate(Map<String, Object> source, Object rootObject, ExpressionEvaluationSummary summary, boolean allowUnknownKeys);
+  Map<String, Object> evaluate(
+    Map<String, Object> source,
+    Object rootObject,
+    ExpressionEvaluationSummary summary,
+    boolean allowUnknownKeys,
+    String breadCrumb);
 }

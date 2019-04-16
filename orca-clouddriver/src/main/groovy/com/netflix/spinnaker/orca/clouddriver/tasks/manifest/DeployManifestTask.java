@@ -115,7 +115,8 @@ public class DeployManifestTask extends AbstractCloudProviderAwareTask implement
             manifestWrapper = contextParameterProcessor.process(
               manifestWrapper,
               contextParameterProcessor.buildExecutionContext(stage, true),
-              true
+              true,
+              "stage[" + stage.getName() + "].manifests"
             );
 
             if (manifestWrapper.containsKey("expressionEvaluationSummary")) {

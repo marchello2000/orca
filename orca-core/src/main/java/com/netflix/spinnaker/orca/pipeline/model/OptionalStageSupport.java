@@ -16,12 +16,14 @@
 
 package com.netflix.spinnaker.orca.pipeline.model;
 
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -92,7 +94,9 @@ public class OptionalStageSupport {
       String expression = contextParameterProcessor
         .process(singletonMap(
           "expression", format("${%s}", this.expression)
-        ), contextParameterProcessor.buildExecutionContext(stage, true), true)
+        ), contextParameterProcessor.buildExecutionContext(stage, true),
+          true,
+          String.format("stage[%s]", stage.getName()))
         .get("expression")
         .toString();
 

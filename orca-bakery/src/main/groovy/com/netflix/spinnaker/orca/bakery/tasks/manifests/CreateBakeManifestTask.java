@@ -105,7 +105,8 @@ public class CreateBakeManifestTask implements RetryableTask {
       overrides = contextParameterProcessor.process(
         overrides,
         contextParameterProcessor.buildExecutionContext(stage, true),
-        true
+        true,
+        "stage[" + stage.getName() + "]"
       );
     }
 

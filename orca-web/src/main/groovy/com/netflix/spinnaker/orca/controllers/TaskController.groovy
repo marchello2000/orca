@@ -511,7 +511,8 @@ class TaskController {
     def evaluated = contextParameterProcessor.process(
       [expression: expression],
       [execution: execution],
-      true
+      true,
+      ""
     )
     return [result: evaluated?.expression, detail: evaluated?.expressionEvaluationSummary]
   }

@@ -16,10 +16,6 @@
 
 package com.netflix.spinnaker.orca.pipeline.tasks;
 
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import com.google.common.collect.ImmutableMap;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.TaskResult;
@@ -27,6 +23,12 @@ import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED;
 import static com.netflix.spinnaker.orca.ExecutionStatus.TERMINAL;
 import static com.netflix.spinnaker.orca.pipeline.expressions.PipelineExpressionEvaluator.SUMMARY;
@@ -52,7 +54,10 @@ public class ExpressionPreconditionTask implements PreconditionTask {
 
     Map<String, Object> result = contextParameterProcessor.process(singletonMap(
       "expression", "${" + stageData.expression + '}'
-    ), contextParameterProcessor.buildExecutionContext(stage, true), true);
+    ), contextParameterProcessor.buildExecutionContext(stage, true),
+      true,
+      String.format("stage[%s]", stage.getName())
+      );
 
     String expression = result.get("expression").toString();
     Matcher matcher = Pattern.compile("\\$\\{(.*)}").matcher(expression);

@@ -143,7 +143,8 @@ class EchoNotifyingStageListener implements StageListener {
     return contextParameterProcessor.process(
       context,
       [execution: execution] as Map<String, Object>,
-      true
+      true,
+      "execution"
     )
   }
 }

@@ -64,7 +64,7 @@ interface ExpressionAware {
 
         if (result is String && ContextParameterProcessor.containsExpression(result)) {
           val augmentedContext = processed.augmentContext(execution)
-          return contextParameterProcessor.process(mapOf(key to result), augmentedContext, true)[key]
+          return contextParameterProcessor.process(mapOf(key to result), augmentedContext, true, "stage[" + this@withMergedContext.name + "]")[key]
         }
 
         return result
@@ -132,7 +132,8 @@ interface ExpressionAware {
       stage.context,
       (stage.context as StageContext).augmentContext(stage.execution),
       true,
-      summary
+      summary,
+      "stage[${stage.name}]"
     )
     )
 

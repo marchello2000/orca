@@ -63,17 +63,31 @@ public class ContextParameterProcessor {
     expressionEvaluator = new PipelineExpressionEvaluator(contextFunctionConfiguration);
   }
 
-  public Map<String, Object> process(Map<String, Object> source, Map<String, Object> context, boolean allowUnknownKeys) {
+  public Map<String, Object> process(
+    Map<String, Object> source,
+    Map<String, Object> context,
+    boolean allowUnknownKeys) {
     ExpressionEvaluationSummary summary = new ExpressionEvaluationSummary();
 
-    return process(source, context, allowUnknownKeys, summary);
+    return process(source, context, allowUnknownKeys, summary, "");
   }
 
   public Map<String, Object> process(
     Map<String, Object> source,
     Map<String, Object> context,
     boolean allowUnknownKeys,
-    ExpressionEvaluationSummary summary) {
+    String breadCrumb) {
+    ExpressionEvaluationSummary summary = new ExpressionEvaluationSummary();
+
+    return process(source, context, allowUnknownKeys, summary, breadCrumb);
+  }
+
+  public Map<String, Object> process(
+    Map<String, Object> source,
+    Map<String, Object> context,
+    boolean allowUnknownKeys,
+    ExpressionEvaluationSummary summary,
+    String breadCrumb) {
 
     if (source.isEmpty()) {
       return new HashMap<>();
@@ -83,7 +97,8 @@ public class ContextParameterProcessor {
       source,
       precomputeValues(context),
       summary,
-      allowUnknownKeys
+      allowUnknownKeys,
+      breadCrumb
     );
 
     if (summary.getTotalEvaluated() > 0 && context.containsKey("execution")) {

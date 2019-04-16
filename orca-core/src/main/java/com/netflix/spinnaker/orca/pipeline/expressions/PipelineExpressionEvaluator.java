@@ -21,7 +21,6 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.util.Collection;
 import java.util.Map;
 
 public class PipelineExpressionEvaluator extends ExpressionsSupport implements ExpressionEvaluator {
@@ -45,13 +44,14 @@ public class PipelineExpressionEvaluator extends ExpressionsSupport implements E
   public Map<String, Object> evaluate(Map<String, Object> source,
                                       Object rootObject,
                                       ExpressionEvaluationSummary summary,
-                                      boolean allowUnknownKeys) {
+                                      boolean allowUnknownKeys,
+                                      String breadCrumb) {
     StandardEvaluationContext evaluationContext = newEvaluationContext(rootObject, allowUnknownKeys);
     return new ExpressionTransform(
         contextFunctionConfiguration.getExpressionFunctionProviders(),
         parserContext,
         parser
-    ).transformMap(source, evaluationContext, summary);
+    ).transformMap(source, evaluationContext, summary, breadCrumb);
   }
 }
 

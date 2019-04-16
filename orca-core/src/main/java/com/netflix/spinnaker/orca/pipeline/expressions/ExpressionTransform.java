@@ -61,24 +61,31 @@ public class ExpressionTransform {
    */
   public Map<String, Object> transformMap(Map<String, Object> source,
                                           EvaluationContext evaluationContext,
-                                          ExpressionEvaluationSummary summary) {
+                                          ExpressionEvaluationSummary summary,
+                                          String breadCrumb) {
     Map<String, Object> result = new HashMap<>();
     Map<String, Object> copy = Collections.unmodifiableMap(source);
     source.forEach((key, value) -> {
+      String subBreadCrumb = breadCrumb + "." + key;
+
       if (value instanceof Map) {
         result.put(
-          transformString(key, evaluationContext, summary, copy).toString(),
-          transformMap((Map) value, evaluationContext, summary)
+          transformString(key, evaluationContext, summary, copy, subBreadCrumb).toString(),
+          transformMap((Map) value, evaluationContext, summary, subBreadCrumb)
         );
       } else if (value instanceof List) {
         result.put(
-          transformString(key, evaluationContext, summary, copy).toString(),
-          transformList((List) value, evaluationContext, summary, copy)
+          transformString(key, evaluationContext, summary, copy, subBreadCrumb).toString(),
+          transformList((List) value, evaluationContext, summary, copy, subBreadCrumb)
         );
       } else {
+        if (key == null) {
+          throw new IllegalStateException("key (name) cannot be null for expression variable at: " + breadCrumb);
+        }
+
         result.put(
-          transformString(key, evaluationContext, summary, copy).toString(),
-          transformString(value, evaluationContext, summary, copy)
+          transformString(key, evaluationContext, summary, copy, subBreadCrumb).toString(),
+          transformString(value, evaluationContext, summary, copy, subBreadCrumb)
         );
       }
     });
@@ -89,31 +96,38 @@ public class ExpressionTransform {
   public List transformList(List source,
                              EvaluationContext evaluationContext,
                              ExpressionEvaluationSummary summary,
-                             Map<String, Object> additionalContext) {
+                             Map<String, Object> additionalContext,
+                            String breadCrumb) {
     List<Object> result = new ArrayList<>();
+    int index = 0;
+
     for (Object obj : source) {
+      String subBreadCrumb = String.format("%s[%d]", breadCrumb, index);
       if (obj instanceof Map) {
         result.add(
-          transformMap((Map<String, Object>) obj, evaluationContext, summary)
+          transformMap((Map<String, Object>) obj, evaluationContext, summary, subBreadCrumb)
         );
       } else if (obj instanceof List) {
         result.addAll(
-          transformList((List) obj, evaluationContext, summary, additionalContext)
+          transformList((List) obj, evaluationContext, summary, additionalContext, subBreadCrumb)
         );
       } else {
         result.add(
-          transformString(obj, evaluationContext, summary, additionalContext)
+          transformString(obj, evaluationContext, summary, additionalContext, subBreadCrumb)
         );
       }
+
+      index++;
     }
 
     return result;
   }
 
   public Object transformString(Object source,
-                                 EvaluationContext evaluationContext,
-                                 ExpressionEvaluationSummary summary,
-                                 Map<String, Object> additionalContext) {
+                                EvaluationContext evaluationContext,
+                                ExpressionEvaluationSummary summary,
+                                Map<String, Object> additionalContext,
+                                String breadCrumb) {
     boolean hasUnresolvedExpressions = false;
     if (isExpression(source)) {
       String literalExpression = includeExecutionParameter(source.toString());
@@ -140,12 +154,12 @@ public class ExpressionTransform {
           result = exp.getValue(evaluationContext);
         }
       } catch (Exception e) {
-        log.info("Failed to evaluate {}, returning raw value {}", source, e.getMessage());
+        log.info("Failed to evaluate {} on {}, returning raw value {}", source, breadCrumb, e.getMessage());
         exception = e;
       } finally {
         Set keys = getKeys(source, additionalContext);
         Object fields = !keys.isEmpty() ? keys : literalExpression;
-        String errorDescription = format("Failed to evaluate %s ", fields);
+        String errorDescription = format("Failed to evaluate %s on %s ", fields, breadCrumb);
         escapedExpressionString = escapedExpressionString != null ? escapedExpressionString : escapeSimpleExpression(source.toString());
         if (exception != null) {
           Throwable originalException = unwrapOriginalException(exception);
