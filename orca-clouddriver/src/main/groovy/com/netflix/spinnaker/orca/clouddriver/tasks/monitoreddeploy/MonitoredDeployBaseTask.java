@@ -226,8 +226,7 @@ public class MonitoredDeployBaseTask implements RetryableTask {
     return taskResultBuilder.context("deploymentMonitorReasons", explanation).build();
   }
 
-  private TaskResult buildTaskResult(
-      TaskResult.TaskResultBuilder taskResultBuilder, String summary) {
+  TaskResult buildTaskResult(TaskResult.TaskResultBuilder taskResultBuilder, String summary) {
     StatusExplanation explanation = new StatusExplanation(summary);
 
     return taskResultBuilder.context("deploymentMonitorReasons", explanation).build();

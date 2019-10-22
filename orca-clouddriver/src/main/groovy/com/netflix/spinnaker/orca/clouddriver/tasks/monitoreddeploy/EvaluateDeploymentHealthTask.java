@@ -47,11 +47,32 @@ public class EvaluateDeploymentHealthTask extends MonitoredDeployBaseTask {
       Stage stage,
       MonitoredDeployStageData context,
       DeploymentMonitorDefinition monitorDefinition) {
-    EvaluateHealthRequest request = new EvaluateHealthRequest(stage);
 
+    // skipToPercentage can be either in "outputs" of a prior stage in which case we should get it
+    // via our context
+    Integer skipToPercentage = (Integer) stage.getContext().getOrDefault("skipToPercentage", 0);
+    Stage createServerGroupStage = stage.getParent();
+
+    if ((skipToPercentage == 0) && (createServerGroupStage != null)) {
+      // If not... then it will be set by deck's call to PATCH on the createServerGroup stage
+      skipToPercentage =
+          (int) createServerGroupStage.getContext().getOrDefault("skipToPercentage", 0);
+    }
+
+    EvaluateHealthRequest request = new EvaluateHealthRequest(stage);
     log.info(
         "Evaluating health of deployment {} at {}% with {}",
         request.getNewServerGroup(), request.getCurrentProgress(), monitorDefinition);
+
+    if (skipToPercentage > request.getCurrentProgress()) {
+      String skipMessage =
+          String.format(
+              "Skipping remaining health evaluation because the user requested to skip to %d percent",
+              skipToPercentage);
+      log.warn(skipMessage);
+
+      return buildTaskResult(TaskResult.builder(ExecutionStatus.SUCCEEDED), skipMessage);
+    }
 
     EvaluateHealthResponse response = monitorDefinition.getService().evaluateHealth(request);
     sanitizeAndLogResponse(response, monitorDefinition, stage.getExecution().getId());
@@ -87,7 +108,6 @@ public class EvaluateDeploymentHealthTask extends MonitoredDeployBaseTask {
       DeploymentMonitorDefinition monitorDefinition) {
     switch (directive) {
       case COMPLETE:
-        // TODO(mvulfson): Actually implement this case in the stages
         return TaskResult.builder(ExecutionStatus.SUCCEEDED).output("skipToPercentage", 100);
 
       case CONTINUE:

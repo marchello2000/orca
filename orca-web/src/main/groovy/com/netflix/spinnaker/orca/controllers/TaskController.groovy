@@ -46,6 +46,8 @@ import org.springframework.security.access.prepost.PreFilter
 import org.springframework.web.bind.annotation.*
 import rx.schedulers.Schedulers
 
+import javax.annotation.Nullable
+import javax.validation.constraints.Null
 import java.nio.charset.Charset
 import java.time.Clock
 import java.time.ZoneOffset
@@ -460,11 +462,30 @@ class TaskController {
   Execution updatePipelineStage(
     @PathVariable String id,
     @PathVariable String stageId, @RequestBody Map context) {
-    def pipeline = executionRepository.retrieve(PIPELINE, id)
+
+    return updateStage(id, stageId, context, null)
+  }
+
+  @PreAuthorize("hasPermission(this.getPipeline(#id)?.application, 'APPLICATION', 'EXECUTE')")
+  @RequestMapping(value = "/pipelines/{id}/stages/{stageId}/outputs", method = RequestMethod.PATCH)
+  Execution updatePipelineStageOutputs(
+    @PathVariable String id,
+    @PathVariable String stageId, @RequestBody Map outputs) {
+
+    return updateStage(id, stageId, null, outputs)
+  }
+
+  private Execution updateStage(String executionId, String stageId, @Nullable Map context, @Nullable Map outputs) {
+    def pipeline = executionRepository.retrieve(PIPELINE, executionId)
     def stage = pipeline.stages.find { it.id == stageId }
     if (stage) {
-      stage.context.putAll(context)
-      validateStageUpdate(stage)
+      if (context != null) {
+        stage.context.putAll(context)
+        validateStageUpdate(stage)
+      }
+      if (outputs != null) {
+        stage.outputs.putAll(outputs)
+      }
 
       stage.lastModified = new Stage.LastModifiedDetails(
         user: AuthenticatedRequest.getSpinnakerUser().orElse("anonymous"),
@@ -473,13 +494,14 @@ class TaskController {
       )
 
       // `lastModifiedBy` is deprecated (pending a update to deck)
-      stage.context["lastModifiedBy"] = AuthenticatedRequest.getSpinnakerUser().orElse("anonymous")
+      stage.context["lastModifiedBy"] = stage.lastModified.user
 
       executionRepository.storeStage(stage)
 
       executionRunner.reschedule(pipeline)
     }
-    pipeline
+
+    return pipeline
   }
 
   // If other execution mutations need validation, factor this out.
@@ -537,7 +559,7 @@ class TaskController {
     )
     return [result: evaluated?.expression, detail: evaluated?.expressionEvaluationSummary]
   }
-  
+
   /**
    * Adds trigger and execution to stage context so that expression evaluation can be tested.
    * This is not great, because it's brittle, but it's very useful to be able to test expressions.

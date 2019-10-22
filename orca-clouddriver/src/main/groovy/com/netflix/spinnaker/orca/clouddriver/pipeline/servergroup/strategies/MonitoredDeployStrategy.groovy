@@ -212,11 +212,18 @@ class MonitoredDeployStrategy implements Strategy {
 
       log.info("Adding `Grow to $p% of Desired Size` stage with context $resizeContext [executionId=${stage.execution.id}]")
 
+      def skipConditionContext = [
+        stageEnabled: [
+          expression: "\${T(java.lang.Math).min((#currentStage().context.skipToPercentage ?: 0), 100) <= $p}".toString(),
+          type: "expression"
+        ]
+      ]
+
       def resizeStage = newStage(
         stage.execution,
         ResizeServerGroupStage.TYPE,
         "Grow to $p% of Desired Size",
-        resizeContext,
+        resizeContext + skipConditionContext,
         stage,
         SyntheticStageOwner.STAGE_AFTER
       )
@@ -236,7 +243,7 @@ class MonitoredDeployStrategy implements Strategy {
           stage.execution,
           DisableServerGroupStage.PIPELINE_CONFIG_TYPE,
           "Disable $p% of Traffic on ${source.serverGroupName}",
-          disableContext,
+          disableContext + skipConditionContext,
           stage,
           SyntheticStageOwner.STAGE_AFTER
         )
@@ -250,7 +257,7 @@ class MonitoredDeployStrategy implements Strategy {
           stage.execution,
           EvaluateDeploymentHealthStage.PIPELINE_CONFIG_TYPE,
           "Evaluate health of deployed instances",
-          evalContext,
+          evalContext + skipConditionContext,
           stage,
           SyntheticStageOwner.STAGE_AFTER
         )
